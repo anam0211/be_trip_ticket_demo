@@ -24,19 +24,19 @@ public class TripAPI {
     @GetMapping("/search")
     public ResponseEntity<?> searchTrip(TripSearchRequest request) {
         List<TripDTO> data = tripService.findAll(request);
-        return ResponseEntity.ok(Map.of("data", data)); // ✅ wrap data
+        return ResponseEntity.ok(Map.of("data", data)); // wrap data
     }
 
     @GetMapping("/schedules")
     public ResponseEntity<?> schedules(TripSearchRequest request) {
         List<TripDTO> data = tripService.findAll(request);
-        return ResponseEntity.ok(Map.of("data", data)); // ✅ wrap data
+        return ResponseEntity.ok(Map.of("data", data)); //  wrap data
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getTripDetail(@PathVariable Integer id) {
         TripDTO t = tripService.findById(id);
         if (t == null) return ResponseEntity.notFound().build();
-        return ResponseEntity.ok(Map.of("data", t)); // ✅ wrap object
+        return ResponseEntity.ok(Map.of("data", t)); // wrap object
     }
 }
