@@ -1,6 +1,5 @@
 package com.javaweb.model;
 
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
 

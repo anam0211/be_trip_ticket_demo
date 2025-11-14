@@ -10,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class TicketRequest {
 
     @JsonProperty("account_id")
-    private Integer account_id;
+    private String account_id;
 
     private String name;
     private String phone;
@@ -70,8 +70,8 @@ public class TicketRequest {
     }
 
     // getters/setters ...
-    public Integer getAccount_id() { return account_id; }
-    public void setAccount_id(Integer account_id) { this.account_id = account_id; }
+    public String getAccount_id() { return account_id; }
+    public void setAccount_id(String account_id) { this.account_id = account_id; }
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
     public String getPhone() { return phone; }

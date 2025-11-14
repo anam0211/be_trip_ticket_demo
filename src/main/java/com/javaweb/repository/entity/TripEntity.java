@@ -1,7 +1,7 @@
 package com.javaweb.repository.entity;
 
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class TripEntity {
     private Integer trip_id;
@@ -14,12 +14,19 @@ public class TripEntity {
     private Integer coach_id;
     private String coach_type;
     private Integer total_seat;
+    private List<String> ordered_seat;
 
     // GET/SET
     public Integer getTrip_id() {
         return trip_id;
     }
-    public void setTrip_id(Integer trip_id) {
+    public List<String> getOrdered_seat() {
+		return ordered_seat;
+	}
+	public void setOrdered_seat(List<String> ordered_seat) {
+		this.ordered_seat = ordered_seat;
+	}
+	public void setTrip_id(Integer trip_id) {
         this.trip_id = trip_id;
     }
 

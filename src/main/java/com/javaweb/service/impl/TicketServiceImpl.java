@@ -20,62 +20,75 @@ public class TicketServiceImpl implements TicketService {
     @Override
     public TicketResponse create(TicketRequest req) {
 
-        // Validate outbound
-        if (req.getOutbound() == null || 
-            req.getOutbound().getOrdered_seat() == null || 
-            req.getOutbound().getOrdered_seat().isEmpty()) 
-        {
+        // Chuẩn hóa account_id
+        Integer accountId = extractId(req.getAccount_id());
+        if (accountId == null) {
+            throw new RuntimeException("Account ID không hợp lệ!");
+        }
+        req.setAccount_id(String.valueOf(accountId));
+
+        // Validate lượt đi
+        if (req.getOutbound() == null ||
+            req.getOutbound().getOrdered_seat() == null ||
+            req.getOutbound().getOrdered_seat().isEmpty()) {
             throw new RuntimeException("Bạn chưa chọn ghế cho lượt đi!");
         }
 
-        // Check ghế lượt đi
-        for (String seat : req.getOutbound().getOrdered_seat()) {
-            if (ticketSeatRepo.seatBooked(req.getOutbound().getTrip_id(), seat)) {
-                throw new RuntimeException("Ghế " + seat + " lượt đi đã được đặt!");
+        // Validate lượt về nếu là vé khứ hồi
+        boolean isReturn =
+        	    req.getTicket_type() != null &&
+        	    req.getTicket_type().equalsIgnoreCase("returnTrip");
+
+        if (isReturn) {
+            if (req.getReturnTrip() == null ||
+                req.getReturnTrip().getOrdered_seat() == null ||
+                req.getReturnTrip().getOrdered_seat().isEmpty()) {
+                throw new RuntimeException("Bạn chưa chọn ghế cho lượt về!");
             }
         }
 
-        // Có lượt về?
-        boolean hasReturn = 
-        	    "return".equals(req.getTicket_type()) && req.getReturnTrip() != null;
+        // Transaction với try-with-resources
+        try (Connection conn = DBUtil.getConnection()) {
 
+            conn.setAutoCommit(false);
 
-        if (hasReturn) {
-            if (req.getReturnTrip().getOrdered_seat() == null || req.getReturnTrip().getOrdered_seat().isEmpty()) {
-                throw new RuntimeException("Bạn chưa chọn ghế lượt về!");
-            }
-
-            for (String seat : req.getReturnTrip().getOrdered_seat()) {
-                if (ticketSeatRepo.seatBooked(req.getReturnTrip().getTrip_id(), seat)) {
-                    throw new RuntimeException("Ghế " + seat + " lượt về đã được đặt!");
+            // Kiểm tra ghế lượt đi
+            for (String seat : req.getOutbound().getOrdered_seat()) {
+                if (ticketSeatRepo.seatBooked(conn, req.getOutbound().getTrip_id(), seat)) {
+                    throw new RuntimeException("Ghế " + seat + " lượt đi đã được đặt!");
                 }
             }
-        }
 
-        // Tính tiền
-        long total = req.getOutbound().getPrice() * req.getOutbound().getOrdered_seat().size();
-        if (hasReturn) {
-            total += req.getReturnTrip().getPrice() * req.getReturnTrip().getOrdered_seat().size();
-        }
+            // Kiểm tra ghế lượt về
+            if (isReturn) {
+                for (String seat : req.getReturnTrip().getOrdered_seat()) {
+                    if (ticketSeatRepo.seatBooked(conn, req.getReturnTrip().getTrip_id(), seat)) {
+                        throw new RuntimeException("Ghế " + seat + " lượt về đã được đặt!");
+                    }
+                }
+            }
 
-        Connection conn = null;
-        try {
-            conn = DBUtil.getConnection();
-            conn.setAutoCommit(false); // ✅ transaction
+            // Tính tiền
+            long total = req.getOutbound().getPrice()
+                        * req.getOutbound().getOrdered_seat().size();
+
+            if (isReturn) {
+                total += req.getReturnTrip().getPrice()
+                        * req.getReturnTrip().getOrdered_seat().size();
+            }
 
             // Lưu ticket
-            Integer ticketId = ticketRepo.save(req, total);
-            if (ticketId == null) throw new RuntimeException("Không tạo được ticket!");
+            int ticketId = ticketRepo.save(conn, req, total);
 
             // Lưu ghế lượt đi
             for (String seat : req.getOutbound().getOrdered_seat()) {
-                ticketSeatRepo.save(ticketId, req.getOutbound().getTrip_id(), seat);
+                ticketSeatRepo.save(conn, ticketId, req.getOutbound().getTrip_id(), seat);
             }
 
-            // Lưu ghế lượt về nếu có
-            if (hasReturn) {
+            // Lưu ghế lượt về
+            if (isReturn) {
                 for (String seat : req.getReturnTrip().getOrdered_seat()) {
-                    ticketSeatRepo.save(ticketId, req.getReturnTrip().getTrip_id(), seat);
+                    ticketSeatRepo.save(conn, ticketId, req.getReturnTrip().getTrip_id(), seat);
                 }
             }
 
@@ -107,7 +120,7 @@ public class TicketServiceImpl implements TicketService {
             res.setOutbound(out);
 
             // return leg
-            if (hasReturn) {
+            if (isReturn) {
                 TicketResponse.Leg ret = new TicketResponse.Leg();
                 ret.setTrip_id(req.getReturnTrip().getTrip_id());
                 ret.setCoach_id(req.getReturnTrip().getCoach_id());
@@ -121,14 +134,14 @@ public class TicketServiceImpl implements TicketService {
             return res;
 
         } catch (Exception e) {
-            try {
-                if (conn != null) conn.rollback(); // ✅ rollback nếu lỗi
-            } catch (Exception ignore) {}
-            throw new RuntimeException(e.getMessage());
-        } finally {
-            try {
-                if (conn != null) conn.setAutoCommit(true);
-            } catch (Exception ignore) {}
+            throw new RuntimeException("Lỗi khi tạo vé: " + e.getMessage(), e);
         }
+    }
+
+    private Integer extractId(String raw) {
+        if (raw == null) return null;
+        String digits = raw.replaceAll("\\D+", "");
+        if (digits.isEmpty()) return null;
+        return Integer.parseInt(digits);
     }
 }

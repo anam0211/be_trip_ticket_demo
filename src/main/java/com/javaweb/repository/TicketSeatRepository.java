@@ -1,6 +1,10 @@
 package com.javaweb.repository;
 
+import java.sql.Connection;
+
 public interface TicketSeatRepository {
-    void save(int ticketId, int tripId, String seatLabel);
-    boolean seatBooked(int tripId, String seatLabel);
+
+    void save(Connection conn, int ticketId, int tripId, String seatLabel);
+
+    boolean seatBooked(Connection conn, int tripId, String seatLabel);
 }

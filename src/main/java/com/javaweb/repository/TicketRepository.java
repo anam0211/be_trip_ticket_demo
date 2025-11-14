@@ -1,9 +1,11 @@
 package com.javaweb.repository;
 
+import java.sql.Connection;
 import com.javaweb.model.TicketRequest;
 
 public interface TicketRepository {
-    // Trả về ticket_id vừa sinh (INT)
-    int save(TicketRequest req, long totalPrice);
-    void updateTotal(int ticketId, long totalPrice);
+
+    int save(Connection conn, TicketRequest req, long totalPrice);
+
+    void updateTotal(Connection conn, int ticketId, long totalPrice);
 }

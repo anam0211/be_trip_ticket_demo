@@ -6,7 +6,7 @@ import java.util.List;
 public class TicketResponse {
 
     private Integer ticket_id;
-    private Integer account_id;
+    private String account_id;
     private String name;
     private String phone;
     private String address;
@@ -24,8 +24,8 @@ public class TicketResponse {
     public Integer getTicket_id() { return ticket_id; }
     public void setTicket_id(Integer ticket_id) { this.ticket_id = ticket_id; }
 
-    public Integer getAccount_id() { return account_id; }
-    public void setAccount_id(Integer account_id) { this.account_id = account_id; }
+    public String getAccount_id() { return account_id; }
+    public void setAccount_id(String account_id) { this.account_id = account_id; }
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }

@@ -3,8 +3,7 @@ package com.javaweb.repository.impl;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 import org.springframework.stereotype.Repository;
 
@@ -16,93 +15,30 @@ import com.javaweb.util.DBUtil;
 @Repository
 public class TripRepositoryImpl implements TripRepository {
 
-    @Override
-    public List<TripEntity> findAll(TripSearchRequest request) {
+
+    // ==============================================
+    // ✅ TÌM MỘT CHIỀU
+    // ==============================================
+    private List<TripEntity> findOneWay(String start, String end, String date) {
+
         List<TripEntity> result = new ArrayList<>();
 
-        StringBuilder sql = new StringBuilder(
-            "SELECT t.trip_id, t.start_location, t.end_location, t.start_time, " +
-            "t.price, t.status, c.coach_type, c.coach_id, c.total_seat " +
-            "FROM trips t " +
-            "JOIN coachs c ON t.coach_id = c.coach_id " +
-            "WHERE 1=1 "
-        );
-
-        if (request.getStart_location() != null && !request.getStart_location().isEmpty()) {
-            sql.append("AND t.start_location LIKE ? ");
-        }
-        if (request.getEnd_location() != null && !request.getEnd_location().isEmpty()) {
-            sql.append("AND t.end_location LIKE ? ");
-        }
-
-        // ✅ hỗ trợ start_date / end_date FE gửi
-        if (request.getStart_date() != null && !request.getStart_date().isEmpty()) {
-            sql.append("AND DATE(t.start_time) >= ? ");
-        }
-        if (request.getEnd_date() != null && !request.getEnd_date().isEmpty()) {
-            sql.append("AND DATE(t.start_time) <= ? ");
-        }
-
-        if (request.getCoach_type() != null && !request.getCoach_type().isEmpty()) {
-            sql.append("AND c.coach_type = ? ");
-        }
-        if (request.getPrice_min() != null) {
-            sql.append("AND t.price >= ? ");
-        }
-        if (request.getPrice_max() != null) {
-            sql.append("AND t.price <= ? ");
-        }
-        if (request.getTime_min() != null && !request.getTime_min().isEmpty()) {
-            sql.append("AND TIME(t.start_time) >= ? ");
-        }
-        if (request.getTime_max() != null && !request.getTime_max().isEmpty()) {
-            sql.append("AND TIME(t.start_time) <= ? ");
-        }
-        if (request.getSeat_min() != null) {
-            sql.append("AND c.total_seat >= ? ");
-        }
-
-        sql.append("ORDER BY t.start_time ASC ");
-        sql.append("LIMIT ? OFFSET ?");
+        String sql =
+            "SELECT t.trip_id, t.start_location, t.end_location, t.start_time, "
+          + "t.price, t.status, c.coach_type, c.coach_id, c.total_seat "
+          + "FROM trips t "
+          + "JOIN coachs c ON t.coach_id = c.coach_id "
+          + "WHERE t.start_location LIKE ? "
+          + "AND t.end_location LIKE ? "
+          + "AND DATE(t.start_time) = ? "
+          + "ORDER BY t.start_time ASC";
 
         try (Connection conn = DBUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            int index = 1;
-
-            if (request.getStart_location() != null && !request.getStart_location().isEmpty()) {
-                stmt.setString(index++, "%" + request.getStart_location() + "%");
-            }
-            if (request.getEnd_location() != null && !request.getEnd_location().isEmpty()) {
-                stmt.setString(index++, "%" + request.getEnd_location() + "%");
-            }
-            if (request.getStart_date() != null && !request.getStart_date().isEmpty()) {
-                stmt.setString(index++, request.getStart_date());
-            }
-            if (request.getEnd_date() != null && !request.getEnd_date().isEmpty()) {
-                stmt.setString(index++, request.getEnd_date());
-            }
-            if (request.getCoach_type() != null && !request.getCoach_type().isEmpty()) {
-                stmt.setString(index++, request.getCoach_type());
-            }
-            if (request.getPrice_min() != null) {
-                stmt.setLong(index++, request.getPrice_min());
-            }
-            if (request.getPrice_max() != null) {
-                stmt.setLong(index++, request.getPrice_max());
-            }
-            if (request.getTime_min() != null && !request.getTime_min().isEmpty()) {
-                stmt.setString(index++, request.getTime_min());
-            }
-            if (request.getTime_max() != null && !request.getTime_max().isEmpty()) {
-                stmt.setString(index++, request.getTime_max());
-            }
-            if (request.getSeat_min() != null) {
-                stmt.setInt(index++, request.getSeat_min());
-            }
-
-            stmt.setInt(index++, request.getSize());
-            stmt.setInt(index++, (request.getPage() - 1) * request.getSize());
+            stmt.setString(1, "%" + start + "%");
+            stmt.setString(2, "%" + end + "%");
+            stmt.setString(3, date);
 
             ResultSet rs = stmt.executeQuery();
 
@@ -117,24 +53,72 @@ public class TripRepositoryImpl implements TripRepository {
                 e.setCoach_type(rs.getString("coach_type"));
                 e.setCoach_id(rs.getInt("coach_id"));
                 e.setTotal_seat(rs.getInt("total_seat"));
+
+                // ✅ lấy danh sách ghế đã đặt
+                e.setOrdered_seat(findBookedSeats(e.getTrip_id()));
+
                 result.add(e);
             }
 
         } catch (Exception e) {
-            throw new RuntimeException("Error query trips", e);
+            throw new RuntimeException(e);
         }
 
         return result;
     }
 
+
+
+    // ==============================================
+    // ✅ MỘT CHIỀU – FE chỉ đọc "data"
+    // ==============================================
+    @Override
+    public List<TripEntity> findAll(TripSearchRequest req) {
+        return findOneWay(
+            req.getStart_location(),
+            req.getEnd_location(),
+            req.getStart_date()
+        );
+    }
+
+
+    // ==============================================
+    // ✅ KHỨ HỒI – FE yêu cầu EXACT KEY:
+    // depart_trips & return_trips
+    // ==============================================
+    @Override
+    public Map<String, List<TripEntity>> findRoundTrip(TripSearchRequest req) {
+
+        Map<String, List<TripEntity>> result = new HashMap<>();
+
+        List<TripEntity> depart =
+            findOneWay(req.getStart_location(),
+                       req.getEnd_location(),
+                       req.getStart_date());
+
+        List<TripEntity> ret =
+            findOneWay(req.getEnd_location(),
+                       req.getStart_location(),
+                       req.getEnd_date());
+
+        result.put("depart_trips", depart);
+        result.put("return_trips", ret);
+
+        return result;
+    }
+
+
+    // ==============================================
+    // ✅ TÌM THEO ID
+    // ==============================================
     @Override
     public TripEntity findById(Integer tripId) {
         String sql =
-            "SELECT t.trip_id, t.start_location, t.end_location, t.start_time, " +
-            "t.price, t.status, c.coach_type, c.coach_id, c.total_seat " +
-            "FROM trips t " +
-            "JOIN coachs c ON t.coach_id = c.coach_id " +
-            "WHERE t.trip_id = ?";
+            "SELECT t.trip_id, t.start_location, t.end_location, t.start_time, "
+          + "t.price, t.status, c.coach_type, c.coach_id, c.total_seat "
+          + "FROM trips t "
+          + "JOIN coachs c ON t.coach_id = c.coach_id "
+          + "WHERE t.trip_id = ?";
 
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -143,6 +127,7 @@ public class TripRepositoryImpl implements TripRepository {
             ResultSet rs = stmt.executeQuery();
 
             if (rs.next()) {
+
                 TripEntity e = new TripEntity();
                 e.setTrip_id(rs.getInt("trip_id"));
                 e.setStart_location(rs.getString("start_location"));
@@ -153,6 +138,10 @@ public class TripRepositoryImpl implements TripRepository {
                 e.setCoach_type(rs.getString("coach_type"));
                 e.setCoach_id(rs.getInt("coach_id"));
                 e.setTotal_seat(rs.getInt("total_seat"));
+
+                // ✅ thêm ghế
+                e.setOrdered_seat(findBookedSeats(tripId));
+
                 return e;
             }
 
@@ -163,6 +152,10 @@ public class TripRepositoryImpl implements TripRepository {
         return null;
     }
 
+
+    // ==============================================
+    // ✅ GHẾ ĐÃ ĐẶT
+    // ==============================================
     @Override
     public List<String> findBookedSeats(Integer tripId) {
         List<String> result = new ArrayList<>();
@@ -173,6 +166,7 @@ public class TripRepositoryImpl implements TripRepository {
 
             stmt.setInt(1, tripId);
             ResultSet rs = stmt.executeQuery();
+
             while (rs.next()) {
                 result.add(rs.getString("seat_label"));
             }

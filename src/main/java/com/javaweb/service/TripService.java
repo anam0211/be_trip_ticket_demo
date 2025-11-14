@@ -1,6 +1,7 @@
 package com.javaweb.service;
 
 import java.util.List;
+import java.util.Map;
 
 import com.javaweb.model.TripDTO;
 import com.javaweb.model.TripSearchRequest;
@@ -12,5 +13,5 @@ public interface TripService {
 
     // Lấy chi tiết chuyến
     TripDTO findById(Integer tripId);
-    
+    Map<String, List<TripDTO>> findRoundTrip(TripSearchRequest request);
 }
