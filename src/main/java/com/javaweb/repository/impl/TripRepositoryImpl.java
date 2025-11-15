@@ -17,7 +17,7 @@ public class TripRepositoryImpl implements TripRepository {
 
 
     // ==============================================
-    // ✅ TÌM MỘT CHIỀU
+    // TÌM MỘT CHIỀU
     // ==============================================
     private List<TripEntity> findOneWay(String start, String end, String date) {
 
@@ -54,7 +54,7 @@ public class TripRepositoryImpl implements TripRepository {
                 e.setCoach_id(rs.getInt("coach_id"));
                 e.setTotal_seat(rs.getInt("total_seat"));
 
-                // ✅ lấy danh sách ghế đã đặt
+                // lấy danh sách ghế đã đặt
                 e.setOrdered_seat(findBookedSeats(e.getTrip_id()));
 
                 result.add(e);
@@ -70,7 +70,7 @@ public class TripRepositoryImpl implements TripRepository {
 
 
     // ==============================================
-    // ✅ MỘT CHIỀU – FE chỉ đọc "data"
+    //  MỘT CHIỀU 
     // ==============================================
     @Override
     public List<TripEntity> findAll(TripSearchRequest req) {
@@ -83,8 +83,7 @@ public class TripRepositoryImpl implements TripRepository {
 
 
     // ==============================================
-    // ✅ KHỨ HỒI – FE yêu cầu EXACT KEY:
-    // depart_trips & return_trips
+    // KHỨ HỒI
     // ==============================================
     @Override
     public Map<String, List<TripEntity>> findRoundTrip(TripSearchRequest req) {
@@ -109,7 +108,7 @@ public class TripRepositoryImpl implements TripRepository {
 
 
     // ==============================================
-    // ✅ TÌM THEO ID
+    // TÌM THEO ID
     // ==============================================
     @Override
     public TripEntity findById(Integer tripId) {
@@ -139,7 +138,7 @@ public class TripRepositoryImpl implements TripRepository {
                 e.setCoach_id(rs.getInt("coach_id"));
                 e.setTotal_seat(rs.getInt("total_seat"));
 
-                // ✅ thêm ghế
+                // thêm ghế
                 e.setOrdered_seat(findBookedSeats(tripId));
 
                 return e;
@@ -154,7 +153,7 @@ public class TripRepositoryImpl implements TripRepository {
 
 
     // ==============================================
-    // ✅ GHẾ ĐÃ ĐẶT
+    // GHẾ ĐÃ ĐẶT
     // ==============================================
     @Override
     public List<String> findBookedSeats(Integer tripId) {

@@ -19,7 +19,7 @@ public class TripServiceImpl implements TripService {
     @Autowired
     private TripRepository tripRepository;
 
-    // ✅ 1. Tìm chuyến 1 chiều (CÓ ordered_seat)
+    // Tìm chuyến 1 chiều (CÓ ordered_seat)
     @Override
     public List<TripDTO> findAll(TripSearchRequest request) {
         List<TripEntity> trips = tripRepository.findAll(request);
@@ -37,7 +37,7 @@ public class TripServiceImpl implements TripService {
             dto.setCoach_id(t.getCoach_id());
             dto.setTotal_seat(t.getTotal_seat());
 
-            // ✅ Lấy ghế đã đặt
+            // Lấy ghế đã đặt
             dto.setOrdered_seat(tripRepository.findBookedSeats(t.getTrip_id()));
 
             result.add(dto);
@@ -46,7 +46,7 @@ public class TripServiceImpl implements TripService {
         return result;
     }
 
-    // ✅ 2. Chi tiết chuyến
+    // Chi tiết chuyến
     @Override
     public TripDTO findById(Integer tripId) {
         TripEntity t = tripRepository.findById(tripId);
