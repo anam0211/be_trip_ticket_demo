@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.*;
 import com.javaweb.model.TicketRequest;
 import com.javaweb.model.TicketResponse;
 import com.javaweb.service.impl.TicketServiceImpl;
-@CrossOrigin(origins = "*")
+//@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("")
 public class TicketAPI {

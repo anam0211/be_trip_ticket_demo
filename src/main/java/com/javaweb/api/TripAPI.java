@@ -10,7 +10,7 @@ import com.javaweb.model.TripDTO;
 import com.javaweb.model.TripSearchRequest;
 import com.javaweb.service.TripService;
 
-@CrossOrigin(origins = "*")
+//@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("")
 public class TripAPI {
