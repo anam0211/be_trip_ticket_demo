@@ -38,8 +38,8 @@ public ResponseEntity<?> schedules(TripSearchRequest request) {
 
         return ResponseEntity.ok(
             Map.of(
-                "depart_trips", depart != null ? depart : List.of(),
-                "return_trips", back != null ? back : List.of()
+                "outbound", depart != null ? depart : List.of(),
+                "returnTrip", back != null ? back : List.of()
             )
         );
     }
