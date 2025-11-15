@@ -10,8 +10,5 @@ public interface TripService {
 
     // Tìm kiếm danh sách chuyến
     List<TripDTO> findAll(TripSearchRequest request);
-
-    // Lấy chi tiết chuyến
-    TripDTO findById(Integer tripId);
     Map<String, List<TripDTO>> findRoundTrip(TripSearchRequest request);
 }

@@ -106,52 +106,6 @@ public class TripRepositoryImpl implements TripRepository {
         return result;
     }
 
-
-    // ==============================================
-    // TÌM THEO ID
-    // ==============================================
-    @Override
-    public TripEntity findById(Integer tripId) {
-        String sql =
-            "SELECT t.trip_id, t.start_location, t.end_location, t.start_time, "
-          + "t.price, t.status, c.coach_type, c.coach_id, c.total_seat "
-          + "FROM trips t "
-          + "JOIN coachs c ON t.coach_id = c.coach_id "
-          + "WHERE t.trip_id = ?";
-
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setInt(1, tripId);
-            ResultSet rs = stmt.executeQuery();
-
-            if (rs.next()) {
-
-                TripEntity e = new TripEntity();
-                e.setTrip_id(rs.getInt("trip_id"));
-                e.setStart_location(rs.getString("start_location"));
-                e.setEnd_location(rs.getString("end_location"));
-                e.setStart_time(rs.getTimestamp("start_time").toLocalDateTime());
-                e.setPrice(rs.getLong("price"));
-                e.setStatus(rs.getString("status"));
-                e.setCoach_type(rs.getString("coach_type"));
-                e.setCoach_id(rs.getInt("coach_id"));
-                e.setTotal_seat(rs.getInt("total_seat"));
-
-                // thêm ghế
-                e.setOrdered_seat(findBookedSeats(tripId));
-
-                return e;
-            }
-
-        } catch (Exception e) {
-            throw new RuntimeException("Error query trip detail", e);
-        }
-
-        return null;
-    }
-
-
     // ==============================================
     // GHẾ ĐÃ ĐẶT
     // ==============================================

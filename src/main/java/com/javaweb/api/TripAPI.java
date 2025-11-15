@@ -1,5 +1,6 @@
 package com.javaweb.api;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,15 +21,13 @@ public class TripAPI {
 
 
     // API tìm chuyến (1 chiều + khứ hồi)
-   
-    @GetMapping("/schedules")
+   @GetMapping("/schedules")
 public ResponseEntity<?> schedules(TripSearchRequest request) {
 
     boolean isRoundTrip =
         "true".equalsIgnoreCase(request.getRound_trip()) ||
         (request.getStart_date() != null && request.getEnd_date() != null);
 
-    // Khứ hồi
     if (isRoundTrip) {
 
         Map<String, List<TripDTO>> data = tripService.findRoundTrip(request);
@@ -36,23 +35,22 @@ public ResponseEntity<?> schedules(TripSearchRequest request) {
         List<TripDTO> depart = data.get("depart_trips");
         List<TripDTO> back   = data.get("return_trips");
 
-        return ResponseEntity.ok(
-            Map.of(
-                "outbound", depart != null ? depart : List.of(),
-                "returnTrip", back != null ? back : List.of()
-            )
-        );
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("outbound", depart != null ? depart : List.of());
+        result.put("returnTrip", back != null ? back : List.of());
+
+        return ResponseEntity.ok(result);
     }
 
-    // Một chiều → trả về "data": []
+    // Một chiều
     List<TripDTO> list = tripService.findAll(request);
 
-    return ResponseEntity.ok(
-        Map.of(
-            "data", list != null ? list : List.of()
-        )
-    );
+    Map<String, Object> result = new LinkedHashMap<>();
+    result.put("data", list != null ? list : List.of());
+
+    return ResponseEntity.ok(result);
 }
+
 
 
 //    

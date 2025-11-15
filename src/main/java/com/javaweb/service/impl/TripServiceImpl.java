@@ -45,31 +45,7 @@ public class TripServiceImpl implements TripService {
 
         return result;
     }
-
-    // Chi tiết chuyến
-    @Override
-    public TripDTO findById(Integer tripId) {
-        TripEntity t = tripRepository.findById(tripId);
-        if (t == null) return null;
-
-        TripDTO dto = new TripDTO();
-        dto.setTrip_id(t.getTrip_id());
-        dto.setStart_location(t.getStart_location());
-        dto.setEnd_location(t.getEnd_location());
-        dto.setStart_time(t.getStart_time());
-        dto.setPrice(t.getPrice());
-        dto.setStatus(t.getStatus());
-        dto.setCoach_type(t.getCoach_type());
-        dto.setCoach_id(t.getCoach_id());
-        dto.setTotal_seat(t.getTotal_seat());
-
-        // Lấy ghế đã đặt
-        dto.setOrdered_seat(tripRepository.findBookedSeats(tripId));
-
-        return dto;
-    }
-
-    //  3. Tìm chuyến khứ hồi (CÓ ordered_seat cho cả đi + về)
+    //  Tìm chuyến khứ hồi (CÓ ordered_seat cho cả đi + về)
     @Override
     public Map<String, List<TripDTO>> findRoundTrip(TripSearchRequest req) {
 
